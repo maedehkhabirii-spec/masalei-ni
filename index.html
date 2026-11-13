@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#06040f" />
+  <title>مسئله‌ای نی — TM Bax</title>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap');
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --pink: #ff2d9b; --cyan: #00e5ff; --violet: #8b5cf6;
+      --bg: #06040f; --muted: rgba(255,255,255,0.38);
+    }
+    html, body {
+      height: 100%; width: 100%; overflow: hidden;
+      background: var(--bg); color: #f4f2f8;
+      font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; user-select: none;
+    }
+    .bg {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 100% 60% at 50% -20%, rgba(139,92,246,0.28) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 0% 100%, rgba(0,180,255,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 100% 90%, rgba(255,45,155,0.14) 0%, transparent 50%),
+        var(--bg);
+      transition: filter 0.2s ease;
+    }
+    .bg.hit { filter: brightness(1.12); }
+    .grain {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(90px);
+      pointer-events: none; opacity: 0.28;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .orb.a { width: 340px; height: 340px; background: var(--pink); top: -5%; left: -10%; }
+    .orb.b { width: 260px; height: 260px; background: var(--cyan); bottom: 15%; right: -8%; animation-duration: 14s; animation-delay: -5s; }
+    .orb.c { width: 200px; height: 200px; background: var(--violet); top: 45%; left: 40%; animation-duration: 20s; animation-delay: -9s; }
+    @keyframes drift { from { transform: translate(0,0); } to { transform: translate(30px,-40px); } }
+
+    .stage {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 5; pointer-events: none;
+      padding-bottom: 160px;
+    }
+    .monitor {
+      width: min(380px, 82vw); aspect-ratio: 16/10; position: relative;
+      border-radius: 14px; background: #0a0814;
+      border: 1px solid rgba(255,45,155,0.35);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 0 60px rgba(255,45,155,0.22), 0 0 120px rgba(139,92,246,0.1), 0 24px 64px rgba(0,0,0,0.5);
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+    .monitor.beat {
+      border-color: rgba(0,229,255,0.5);
+      box-shadow: 0 0 0 1px rgba(0,229,255,0.12), 0 0 80px rgba(255,45,155,0.35), 0 0 140px rgba(0,229,255,0.12), 0 24px 64px rgba(0,0,0,0.5);
+      transform: scale(1.012);
+    }
+    .monitor-screen { position: absolute; inset: 6px; border-radius: 9px; background: #04020a; overflow: hidden; }
+    #viz { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .monitor-scan {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 3px);
+      opacity: 0.4;
+    }
+    .monitor-info {
+      position: absolute; bottom: 12px; left: 0; right: 0;
+      text-align: center; z-index: 2; pointer-events: none;
+    }
+    .monitor-info h1 {
+      font-size: clamp(1.25rem, 3.8vw, 1.65rem); font-weight: 900;
+      background: linear-gradient(90deg, var(--pink), var(--cyan), var(--pink));
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite; letter-spacing: -0.5px;
+    }
+    @keyframes shimmer { to { background-position: 200% center; } }
+    .monitor-info p { font-size: 0.65rem; letter-spacing: 4px; color: var(--muted); margin-top: 2px; font-weight: 600; }
+
+    .lyric-box {
+      margin-top: 24px; min-height: 4.2em;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0 20px; max-width: 90vw; gap: 6px;
+    }
+    .lyric-fa {
+      font-size: clamp(1.1rem, 3.6vw, 1.55rem); font-weight: 800;
+      text-align: center; line-height: 1.35; color: #fff;
+      text-shadow: 0 0 20px rgba(255,45,155,0.7), 0 0 40px rgba(255,45,155,0.35);
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    }
+    .lyric-en {
+      font-size: clamp(0.75rem, 2.4vw, 0.95rem); font-weight: 500;
+      text-align: center; line-height: 1.35; color: rgba(255,255,255,0.45);
+      letter-spacing: 0.3px; direction: ltr;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.45s cubic-bezier(0.16,1,0.3,1) 0.05s, transform 0.45s cubic-bezier(0.16,1,0.3,1) 0.05s;
+    }
+    .lyric-fa.on, .lyric-en.on { opacity: 1; transform: translateY(0); }
+    .lyric-fa.off, .lyric-en.off { opacity: 0; transform: translateY(-8px); }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+      padding: 14px 18px; padding-top: max(14px, env(safe-area-inset-top));
+      display: flex; justify-content: space-between; align-items: center;
+      pointer-events: none;
+    }
+    .brand {
+      font-size: 0.78rem; font-weight: 800;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand span { font-weight: 500; opacity: 0.7; margin-right: 6px; font-size: 0.7rem; }
+    .status { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.5px; font-weight: 500; }
+
+    .fx { position: fixed; inset: 0; pointer-events: none; z-index: 30; overflow: hidden; }
+    .spark {
+      position: absolute; width: 4px; height: 4px; border-radius: 50%;
+      animation: sparkOut 0.6s cubic-bezier(0.1,0.8,0.3,1) forwards;
+    }
+    @keyframes sparkOut {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0) translate(var(--dx), var(--dy)); opacity: 0; }
+    }
+    .ring {
+      position: absolute; border-radius: 50%; border: 1.5px solid var(--pink);
+      animation: ringOut 0.5s cubic-bezier(0.1,0.8,0.3,1) forwards;
+    }
+    @keyframes ringOut {
+      0% { width: 12px; height: 12px; margin: -6px; opacity: 0.8; }
+      100% { width: 100px; height: 100px; margin: -50px; opacity: 0; border-color: var(--cyan); }
+    }
+
+    .dock {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      padding: 0 14px; padding-bottom: max(14px, env(safe-area-inset-bottom));
+    }
+    .player {
+      max-width: 440px; margin: 0 auto;
+      background: rgba(12, 8, 24, 0.75);
+      backdrop-filter: blur(40px) saturate(1.4);
+      -webkit-backdrop-filter: blur(40px) saturate(1.4);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+      position: relative;
+    }
+    .player::before {
+      content: ''; position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,45,155,0.4), rgba(0,229,255,0.3), transparent);
+      pointer-events: none;
+    }
+    .player-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px 8px; }
+    .cover {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--pink), #6d28d9);
+      display: grid; place-items: center; font-size: 1.1rem;
+      box-shadow: 0 4px 16px rgba(255,45,155,0.3); flex-shrink: 0;
+    }
+    .meta { flex: 1; min-width: 0; }
+    .meta h2 { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meta p { font-size: 0.68rem; color: var(--muted); margin-top: 1px; font-weight: 500; }
+    .sc-box { width: 100%; height: 90px; overflow: hidden; border-radius: 0 0 18px 18px; }
+    .sc-box iframe { width: 100%; height: 125px; border: none; margin-top: -18px; }
+
+    .gate {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(4,2,12,0.96);
+      display: grid; place-items: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .gate.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    .gate-inner { text-align: center; padding: 28px; }
+    .gate-inner h1 {
+      font-size: clamp(1.6rem, 5vw, 2.2rem); font-weight: 900; margin-bottom: 6px;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .gate-inner p { font-size: 0.8rem; color: var(--muted); letter-spacing: 3px; margin-bottom: 32px; font-weight: 500; }
+    .gate-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--pink), #7c3aed);
+      color: #fff; border: none; padding: 14px 40px; border-radius: 50px;
+      font-family: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(255,45,155,0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .gate-btn:active { transform: scale(0.96); }
+  </style>
+</head>
+<body>
+  <div class="bg" id="bg">
+    <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+  </div>
+  <div class="grain"></div>
+  <div class="fx" id="fx"></div>
+
+  <div class="topbar">
+    <div class="brand">مسئله‌ای نی <span>· TM Bax</span></div>
+    <div class="status" id="status">آماده</div>
+  </div>
+
+  <div class="stage">
+    <div class="monitor" id="monitor">
+      <div class="monitor-screen">
+        <canvas id="viz"></canvas>
+        <div class="monitor-scan"></div>
+        <div class="monitor-info">
+          <h1>مسئله‌ای نی</h1>
+          <p>TM BAX</p>
+        </div>
+      </div>
+    </div>
+    <div class="lyric-box">
+      <div class="lyric-fa" id="lyricFa"></div>
+      <div class="lyric-en" id="lyricEn"></div>
+    </div>
+  </div>
+
+  <div class="gate" id="gate">
+    <div class="gate-inner">
+      <h1>مسئله‌ای نی</h1>
+      <p>TM BAX</p>
+      <button class="gate-btn" id="startBtn">▶  شروع</button>
+    </div>
+  </div>
+
+  <div class="dock">
+    <div class="player">
+      <div class="player-head">
+        <div class="cover">♪</div>
+        <div class="meta">
+          <h2>مسئله‌ای نی</h2>
+          <p>TM Bax</p>
+        </div>
+      </div>
+      <div class="sc-box">
+        <iframe id="sc" allow="autoplay"
+          src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/sadamfazal/masalei-ni-official-audio&color=%23ff2d9b&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&show_teaser=false&visual=false">
+        </iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lyrics = [
+      {t:7.8, fa:"امشب با دنیا قهرم", en:"Tonight I'm done with the world"},
+      {t:11.6, fa:"غرق نور این شهرم", en:"Lost in this city's lights"},
+      {t:15, fa:"افق شده مقصدم", en:"The horizon is my destination"},
+      {t:19, fa:"برم گم شم برنگردم", en:"I'll get lost and never come back"},
+      {t:26.2, fa:"صد و نود تو اتوبانم", en:"Doing 190 on the highway"},
+      {t:30.7, fa:"سرکار میگیره حالم", en:"The cop is killing my vibe"},
+      {t:34.5, fa:"میگم هیچ مسئله‌ای واسم مسئله‌ای نی", en:"I say nothing's a problem for me"},
+      {t:38.6, fa:"انقده توپه حالم که بیخیالم", en:"I'm so high I don't even care"},
+      {t:42, fa:"میگم هیچ مسئله‌ای واسم مسئله‌ای نی", en:"I say nothing's a problem for me"},
+      {t:46.1, fa:"من یه عمر بازیچه این روزگارم", en:"I've been this world's puppet my whole life"},
+      {t:49.9, fa:"هی هو سرکار بزار برم چون", en:"Hey ho, officer let me go 'cause"},
+      {t:53.5, fa:"هی هو فازم خیلی بده ولم کن", en:"Hey ho, I'm in a bad mood, leave me"},
+      {t:57.3, fa:"هی هو سرکار بزار برم چون", en:"Hey ho, officer let me go 'cause"},
+      {t:61.1, fa:"هی هو فازم خیلی بده ولم کن", en:"Hey ho, I'm in a bad mood, leave me"},
+      {t:65.2, fa:"هیچ مسئله‌ای واسم مسئله‌ای", en:"Nothing's a problem for me"},
+      {t:67.1, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:70.1, fa:"مسئله‌ای", en:"No problem"},
+      {t:71, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:74, fa:"مسئله‌ای نی", en:"No worries"},
+      {t:82.5, fa:"هر چی دنیا رو ساده‌تر دیدم", en:"The clearer I saw the world"},
+      {t:86.3, fa:"ابلهانو فراوان دیدم", en:"The more fools I found"},
+      {t:90.1, fa:"هر چی دنیا رو ساده‌تر دیدم", en:"The clearer I saw the world"},
+      {t:93.9, fa:"ابلهانو فراوان دیدم", en:"The more fools I found"},
+      {t:97.7, fa:"کل شهر با ما بیداره", en:"The whole city's up with us"},
+      {t:99.4, fa:"تازه شروشو در بیاریم", en:"Let's start the chaos"},
+      {t:101.5, fa:"جردنو میریم بالا پایین", en:"Up and down Jordan Street"},
+      {t:103.2, fa:"دور دور عین ندیده‌هاییم", en:"Cruising like it's the first time"},
+      {t:105.3, fa:"تا دلت بخواد جیبه پره", en:"Pockets full as you want"},
+      {t:107.1, fa:"پرش ور میدم بی دلهره", en:"I'll bribe with no worry"},
+      {t:109.1, fa:"خیابونای شهر مال خودم", en:"These streets are mine"},
+      {t:111.1, fa:"کارد حریف دیگه نمیبره", en:"Rivals don't stand a chance"},
+      {t:113.3, fa:"جون سر کار خودین همه دخترخاله طوری ان", en:"Officer please, they're all family"},
+      {t:117, fa:"شلوارا پاره اینا کولی ان دیگه از زندگی بریدن", en:"Torn jeans, outcasts, done with life"},
+      {t:120.8, fa:"دنبال یه کیس فوری ان همه عملی فیک دکوری ان", en:"Looking for a quick score, all fake acts"},
+      {t:124.5, fa:"یکی چپ یکی راست کلین", en:"One left, one right, clean"},
+      {t:126.4, fa:"همش آویزونن انگار مریدن", en:"All hanging around like they're dying"},
+      {t:128.5, fa:"هی هو سرکار بزار برم چون", en:"Hey ho, officer let me go 'cause"},
+      {t:132.3, fa:"هی هو فازم خیلی بده ولم کن", en:"Hey ho, I'm in a bad mood, leave me"},
+      {t:136.4, fa:"هی هو سرکار بزار برم چون", en:"Hey ho, officer let me go 'cause"},
+      {t:140.1, fa:"هی هو فازم خیلی بده ولم کن", en:"Hey ho, I'm in a bad mood, leave me"},
+      {t:144, fa:"هیچ مسئله‌ای واسم مسئله‌ای", en:"Nothing's a problem for me"},
+      {t:145.9, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:148.8, fa:"مسئله‌ای", en:"No problem"},
+      {t:149.8, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:152.7, fa:"مسئله‌ای", en:"No problem"},
+      {t:153.6, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:156.5, fa:"مسئله‌ای", en:"No problem"},
+      {t:157.3, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:161.2, fa:"هر چی دنیا رو ساده‌تر دیدم", en:"The clearer I saw the world"},
+      {t:165.2, fa:"ابلهانو فراوان دیدم", en:"The more fools I found"},
+      {t:168.9, fa:"هر چی دنیا رو ساده‌تر دیدم", en:"The clearer I saw the world"},
+      {t:172.8, fa:"ابلهانو فراوان دیدم", en:"The more fools I found"},
+      {t:177.6, fa:"امشب با دنیا قهرم", en:"Tonight I'm done with the world"},
+      {t:181.4, fa:"غرق نور این شهرم", en:"Lost in this city's lights"},
+      {t:185.3, fa:"افق شده مقصدم", en:"The horizon is my destination"},
+      {t:189, fa:"برم گم شم برنگردم", en:"I'll get lost and never come back"},
+      {t:195, fa:"صد و نود تو اتوبانم", en:"Doing 190 on the highway"},
+      {t:198.5, fa:"سرکار میگیره حالم", en:"The cop is killing my vibe"},
+      {t:202.6, fa:"میگم هیچ مسئله‌ای واسم مسئله‌ای نی", en:"I say nothing's a problem for me"},
+      {t:206.5, fa:"انقده توپه حالم که بیخیالم", en:"I'm so high I don't even care"},
+      {t:210.2, fa:"میگم هیچ مسئله‌ای واسم مسئله‌ای نی", en:"I say nothing's a problem for me"},
+      {t:214.1, fa:"من یه عمر بازیچه این روزگارم", en:"I've been this world's puppet my whole life"},
+      {t:217.9, fa:"هی هو سرکار بزار برم چون", en:"Hey ho, officer let me go 'cause"},
+      {t:221.7, fa:"هی هو فازم خیلی بده ولم کن", en:"Hey ho, I'm in a bad mood, leave me"},
+      {t:225.2, fa:"هی هو سرکار بزار برم چون", en:"Hey ho, officer let me go 'cause"},
+      {t:229.2, fa:"هی هو فازم خیلی بده ولم کن", en:"Hey ho, I'm in a bad mood, leave me"},
+      {t:234.3, fa:"مسئله‌ای", en:"No problem"},
+      {t:235.2, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:238.2, fa:"مسئله‌ای", en:"No problem"},
+      {t:239.1, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:242, fa:"مسئله‌ای", en:"No problem"},
+      {t:242.9, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:245.8, fa:"مسئله‌ای", en:"No problem"},
+      {t:246.7, fa:"نی نی نی نی نی نی", en:"No no no no no no"},
+      {t:250.8, fa:"مسئله‌ای نی", en:"No worries"}
+    ];
+
+    const bg = document.getElementById('bg');
+    const monitor = document.getElementById('monitor');
+    const lyricFa = document.getElementById('lyricFa');
+    const lyricEn = document.getElementById('lyricEn');
+    const status = document.getElementById('status');
+    const fx = document.getElementById('fx');
+    const canvas = document.getElementById('viz');
+    const ctx = canvas.getContext('2d');
+
+    let widget = null, playing = false, lyricIdx = 0, raf = null, phase = 0;
+
+    function setLyric(fa, en) {
+      lyricFa.classList.remove('on'); lyricFa.classList.add('off');
+      lyricEn.classList.remove('on'); lyricEn.classList.add('off');
+      setTimeout(() => {
+        lyricFa.textContent = fa;
+        lyricEn.textContent = en || '';
+        lyricFa.classList.remove('off');
+        lyricEn.classList.remove('off');
+        void lyricFa.offsetWidth;
+        lyricFa.classList.add('on');
+        lyricEn.classList.add('on');
+      }, 280);
+    }
+
+    function pulse() {
+      monitor.classList.add('beat'); bg.classList.add('hit');
+      setTimeout(() => { monitor.classList.remove('beat'); bg.classList.remove('hit'); }, 160);
+    }
+
+    function initSC() {
+      widget = SC.Widget(document.getElementById('sc'));
+      widget.bind(SC.Widget.Events.READY, () => { status.textContent = 'آماده'; });
+      widget.bind(SC.Widget.Events.PLAY, () => {
+        playing = true; status.textContent = 'در حال پخش'; lyricIdx = 0; draw();
+      });
+      widget.bind(SC.Widget.Events.PAUSE, () => {
+        playing = false; status.textContent = 'متوقف'; if (raf) cancelAnimationFrame(raf);
+      });
+      widget.bind(SC.Widget.Events.FINISH, () => {
+        playing = false; status.textContent = 'پایان'; if (raf) cancelAnimationFrame(raf);
+      });
+      widget.bind(SC.Widget.Events.PLAY_PROGRESS, (d) => {
+        const t = d.currentPosition / 1000;
+        while (lyricIdx < lyrics.length && t + 0.08 >= lyrics[lyricIdx].t) {
+          setLyric(lyrics[lyricIdx].fa, lyrics[lyricIdx].en);
+          lyricIdx++;
+          pulse();
+        }
+      });
+    }
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('gate').classList.add('hide');
+      initSC();
+      setTimeout(() => { if (widget) widget.play(); }, 400);
+    });
+
+    document.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.dock') || e.target.closest('.gate') || e.target.closest('button') || e.target.closest('iframe')) return;
+      const x = e.clientX, y = e.clientY;
+      const ring = document.createElement('div');
+      ring.className = 'ring';
+      ring.style.left = x + 'px'; ring.style.top = y + 'px';
+      fx.appendChild(ring);
+      setTimeout(() => ring.remove(), 500);
+      for (let i = 0; i < 8; i++) {
+        const s = document.createElement('div');
+        s.className = 'spark';
+        const a = (Math.PI * 2 * i) / 8 + Math.random() * 0.2;
+        const d = 30 + Math.random() * 50;
+        s.style.setProperty('--dx', Math.cos(a) * d + 'px');
+        s.style.setProperty('--dy', Math.sin(a) * d + 'px');
+        s.style.left = x + 'px'; s.style.top = y + 'px';
+        s.style.background = i % 2 ? 'var(--pink)' : 'var(--cyan)';
+        s.style.boxShadow = '0 0 8px ' + s.style.background;
+        fx.appendChild(s);
+        setTimeout(() => s.remove(), 600);
+      }
+    });
+
+    function resize() {
+      const p = canvas.parentElement;
+      if (!p) return;
+      const r = p.getBoundingClientRect();
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 60);
+
+    function draw() {
+      if (!playing) return;
+      raf = requestAnimationFrame(draw);
+      phase += 0.07;
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      const w = canvas.width / dpr, h = canvas.height / dpr;
+      ctx.clearRect(0, 0, w, h);
+      const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w * 0.5);
+      g.addColorStop(0, 'rgba(139,92,246,0.12)');
+      g.addColorStop(0.6, 'rgba(255,45,155,0.04)');
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      const n = 36, bw = w / n;
+      for (let i = 0; i < n; i++) {
+        const v1 = Math.sin(phase + i * 0.3) * 0.5 + 0.5;
+        const v2 = Math.sin(phase * 1.3 + i * 0.18) * 0.3 + 0.45;
+        const v = v1 * v2;
+        const bh = v * h * 0.58;
+        const hue = 300 + (i / n) * 50;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'hsla(' + hue + ',90%,55%,0.7)';
+        ctx.fillStyle = 'hsla(' + hue + ',90%,52%,' + (0.25 + v * 0.65) + ')';
+        ctx.fillRect(i * bw + 1.5, h - bh, bw - 3, bh);
+      }
+      const pulse = Math.sin(phase * 2) * 0.5 + 0.5;
+      ctx.beginPath();
+      ctx.arc(w/2, h/2, 12 + pulse * 24, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,45,155,' + (0.15 + pulse * 0.4) + ')';
+      ctx.lineWidth = 1.5 + pulse * 2.5;
+      ctx.shadowBlur = 14; ctx.shadowColor = '#ff2d9b';
+      ctx.stroke();
+    }
+  </script>
+</body>
+</html>
